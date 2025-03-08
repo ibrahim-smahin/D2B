@@ -1,475 +1,713 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
+  <head>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>نظام الإدارة المالية</title>
     <style>
-        :root {
-            --primary: #2c3e50;
-            --secondary: #3498db;
-            --success: #27ae60;
-            --error: #e74c3c;
-            --text: #2c3e50;
-            --bg: #f5f6fa;
-            --shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+      :root {
+        --primary: #2c3e50;
+        --secondary: #3498db;
+        --success: #27ae60;
+        --error: #e74c3c;
+        --text: #2c3e50;
+        --bg: #f5f6fa;
+        --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
 
-        /* أنماط عامة */
-        body {
-            
-            font-family: 'Tajawal', sans-serif;
-            background: var(--bg);
-            min-height: 100vh;
-        }
+      /* أنماط عامة */
+      body {
+        font-family: "Tajawal", sans-serif;
+        background: var(--bg);
+        min-height: 100vh;
+      }
 
-        /* نظام المصادقة */
-        .auth-container {
-            max-width: 400px;
-            margin: 5rem auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-        }
+      /* نظام المصادقة */
+      .auth-container {
+        max-width: 400px;
+        margin: 5rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+      }
 
-        /* الهيدر */
+      /* الهيدر */
+      .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--primary);
+        color: white;
+      }
+
+      /* الأزرار الرئيسية */
+      .main-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        padding: 2rem;
+      }
+
+      /* الجداول */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: center;
+      }
+
+      /* النماذج */
+      .form-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+      }
+
+      .entry-form {
+        background: white;
+        width: 90%;
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 1rem;
+        border-radius: 10px;
+      }
+
+      /* التذييل */
+      footer {
+        text-align: center;
+        padding: 1rem;
+        background: var(--primary);
+        color: white;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+      }
+      @media (max-width: 768px) {
         .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            background: var(--primary);
-            color: white;
+          flex-direction: column;
+          text-align: center;
+          gap: 1rem;
         }
 
-        /* الأزرار الرئيسية */
-        .main-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            padding: 2rem;
-        }
-
-        /* الجداول */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1rem 0;
-        }
-
-        .data-table th, 
+        .data-table th,
         .data-table td {
-            padding: 12px;
-            border: 1px solid #ddd;
-            text-align: center;
+          padding: 8px;
+          font-size: 14px;
         }
+      }
+      /* تأثيرات الأزرار */
+      button {
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
 
-        /* النماذج */
-        .form-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-        }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+      }
+      .form-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none; /* افتراضيًا مخفي */
+        justify-content: center;
+        align-items: center;
+        z-index: 1000; /* تأكد من ظهوره فوق كل العناصر */
+      }
+      contentSection {
+        display: block !important;
+        visibility: visible !important;
+      }
+      /* تحسين الأزرار */
+      button {
+        background-color: var(--secondary);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+      }
 
-        .entry-form {
-            background: white;
-            width: 90%;
-            max-width: 500px;
-            margin: 2rem auto;
-            padding: 1rem;
-            border-radius: 10px;
-        }
+      button:hover {
+        background-color: var(--success);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
 
-        /* التذييل */
-        footer {
-            text-align: center;
-            padding: 1rem;
-            background: var(--primary);
-            color: white;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-        @media (max-width: 768px) {
-  .dashboard-header {
-    flex-direction: column;
-    text-align: center;
-    gap: 1rem;
-  }
-  
-  .data-table th, 
-  .data-table td {
-    padding: 8px;
-    font-size: 14px;
-  }
-}
-/* تأثيرات الأزرار */
-button {
-  transition: transform 0.2s, box-shadow 0.2s;
-}
+      /* تحسين النماذج */
+      .entry-form {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        max-width: 500px;
+        width: 90%;
+        text-align: center;
+      }
 
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-}
-.form-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: none; /* افتراضيًا مخفي */
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* تأكد من ظهوره فوق كل العناصر */
-}
-contentSection {
-    display: block !important;
-    visibility: visible !important;
-}
+      .entry-form input,
+      .entry-form select,
+      .entry-form textarea {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 16px;
+      }
 
+      .entry-form button {
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      /* تحسين الجداول */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .data-table th {
+        background-color: var(--primary);
+        color: white;
+        padding: 12px;
+      }
+
+      .data-table td {
+        padding: 12px;
+        border: 1px solid #ddd;
+      }
+
+      .data-table tr:hover {
+        background-color: #f0f0f0;
+        transition: background 0.3s;
+      }
+
+      /* تحسين الرسائل */
+      .message-box {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--success);
+        color: white;
+        padding: 15px;
+        border-radius: 6px;
+        box-shadow: var(--shadow);
+        display: none;
+        font-size: 16px;
+      }
+      /* تحسين تصميم النموذج */
+      .entry-form {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        max-width: 450px;
+        width: 90%;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        text-align: right;
+      }
+
+      .form-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .entry-form input,
+      .entry-form select,
+      .entry-form textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 16px;
+      }
+
+      .entry-form button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 6px;
+      }
+
+      .cancel-btn {
+        background-color: var(--error);
+      }
+
+      .cancel-btn:hover {
+        background-color: #c0392b;
+      }
     </style>
-</head>
-<body>
-    
+  </head>
+  <body>
     <!-- صفحة المصادقة -->
     <div id="authSection" class="auth-container">
-        <h2>تسجيل الدخول</h2>
-        <form id="loginForm">
-            <input type="text" placeholder="اسم المستخدم" required>
-            <input type="password" placeholder="كلمة المرور" required>
-            <button type="submit">دخول</button>
-        </form>
+      <h2>تسجيل الدخول</h2>
+      <form id="loginForm">
+        <input type="text" placeholder="اسم المستخدم" required />
+        <input type="password" placeholder="كلمة المرور" required />
+        <button type="submit">دخول</button>
+      </form>
     </div>
 
     <!-- لوحة التحكم -->
-    <div id="dashboard" style="display: none;">
-        <!-- الهيدر -->
-        <div class="dashboard-header">
-            <div id="currentTime"></div>
-            <h1> Deals 2 Buy </h1>
-            <div>مرحبا، <span id="username"></span></div>
-        </div>
+    <div id="dashboard" style="display: none">
+      <!-- الهيدر -->
+      <div class="dashboard-header">
+        <div id="currentTime"></div>
+        <h1>Deals 2 Buy</h1>
+        <div>مرحبا، <span id="username"></span></div>
+      </div>
 
-        <!-- الأزرار الرئيسية -->
-        <div class="main-buttons">
-            <button onclick="showSection('inputs')">المدخلات</button>
-            <button onclick="showSection('expenses')">المصروفات</button>
-            <button onclick="showSection('total')">المجموع</button>
-        </div>
+      <!-- الأزرار الرئيسية -->
+      <div class="main-buttons">
+        <button onclick="showSection('inputs')">المدخلات</button>
+        <button onclick="showSection('expenses')">المصروفات</button>
+        <button onclick="showSection('total')">المجموع</button>
+      </div>
 
-        <!-- محتوى الصفحات -->
-        <div id="contentSection"></div>
+      <!-- محتوى الصفحات -->
+      <div id="contentSection"></div>
     </div>
 
     <!-- التذييل -->
     <footer>© Ibrahim Smahin 2025</footer>
 
-<script>
-    // تصدير الدوال للوصول إليها من HTML
-window.showForm = showForm;
-window.closeForm = closeForm;
-window.submitForm = submitForm;
+    <script>
+      // تصدير الدوال للوصول إليها من HTML
+      window.showForm = showForm;
+      window.closeForm = closeForm;
+      window.submitForm = submitForm;
 
+      // تكامل مع جوجل شيتس
+      const API_URL =
+        "https://script.google.com/macros/s/AKfycbx0Ml1znLvTbEQK3w34RCzhamE3bbRDCP-uBBzUNaGGKF-bbjaLI4b94CTSecIBGVRL3A/exec";
 
-// تكامل مع جوجل شيتس
-const API_URL = 'https://script.google.com/macros/s/AKfycbzo55a8d-na8labiP4E_2p1moJviEjQcybymODDJDBoZWW5O-kcipdKzAl4l6cQI0Slwg/exec';
+      // بيانات التطبيق
+      let currentUser = null;
+      let records = {
+        inputs: [],
+        expenses: [],
+      };
 
-// بيانات التطبيق
-let currentUser = null;
-let records = {
-    inputs: [],
-    expenses: []
-};
+      // إدارة المصادقة
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const username = e.target[0].value;
+          const password = e.target[1].value;
 
-// إدارة المصادقة
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = e.target[0].value;
-    const password = e.target[1].value;
-    
-    // التحقق من بيانات المستخدم (يجب استبدالها بالاتصال بالAPI)
-    if(username === 'admin' && password === 'admin123') {
-        currentUser = username;
-        document.getElementById('authSection').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('username').textContent = username;
-        startClock();
-        loadData();
-    }
-});
+          // التحقق من بيانات المستخدم (يجب استبدالها بالاتصال بالAPI)
+          if (username === "admin" && password === "admin123") {
+            currentUser = username;
+            document.getElementById("authSection").style.display = "none";
+            document.getElementById("dashboard").style.display = "block";
+            document.getElementById("username").textContent = username;
+            startClock();
+            loadData();
+          }
+        });
 
-// تحميل البيانات
-async function loadData() {
-    try {
-        const response = await fetch(`${API_URL}?action=getAll`);
-        const data = await response.json();
-        
-        // تحقق من بنية البيانات
-        console.log("البيانات المحملة:", data);
-        
-        records.inputs = data.inputs || [];
-        records.expenses = data.expenses || [];
-        
-        updateTables();
-    } catch (error) {
-        console.error('فشل في تحميل البيانات:', error);
-    }
-}
-// إدارة الوقت
-function startClock() {
-    setInterval(() => {
-        const options = { 
-            timeZone: 'Asia/Gaza',
+      // تحميل البيانات
+      async function loadData() {
+        try {
+          const response = await fetch(`${API_URL}?action=getAll`);
+          const data = await response.json();
+
+          // تحقق من بنية البيانات
+          console.log("البيانات المحملة:", data);
+
+          records.inputs = data.inputs || [];
+          records.expenses = data.expenses || [];
+
+          updateTables();
+        } catch (error) {
+          console.error("فشل في تحميل البيانات:", error);
+        }
+      }
+      // إدارة الوقت
+      function startClock() {
+        setInterval(() => {
+          const options = {
+            timeZone: "Asia/Gaza",
             hour12: true,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          };
+
+          document.getElementById("currentTime").textContent =
+            new Date().toLocaleString("ar-EG", options);
+        }, 1000);
+      }
+
+      // إدارة السجلات
+      function addRecord(type, data) {
+        const newRecord = {
+          id: generateId(),
+          ...data,
+          date: getFormattedDate(),
         };
-        
-        document.getElementById('currentTime').textContent = 
-            new Date().toLocaleString('ar-EG', options);
-    }, 1000);
-}
 
-// إدارة السجلات
-function addRecord(type, data) {
-    const newRecord = {
-        id: generateId(),
-        ...data,
-        date: new Date().toLocaleString('ar-EG', { 
-            timeZone: 'Asia/Gaza',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        })
-    };
-    
-    records[type].push(newRecord);
-    updateTables();
-    saveToGoogleSheets(type, newRecord);
-}
+        records[type].push(newRecord);
+        updateTables();
+        saveToGoogleSheets(type, newRecord);
+      }
 
-function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
+      function generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+      }
 
-// تكامل مع جوجل شيتس
-async function saveToGoogleSheets(type, data) {
-    const formData = new FormData();
-    formData.append('action', 'addRecord');
-    formData.append('type', type);
-    formData.append('data', JSON.stringify(data));
+      // تكامل مع جوجل شيتس
+      async function saveToGoogleSheets(type, data) {
+        const formData = new FormData();
+        formData.append("action", "addRecord");
+        formData.append("type", type);
+        formData.append("data", JSON.stringify(data));
 
-    await fetch(API_URL, {
-        method: 'POST',
-        body: formData
-    });
-}
+        await fetch(API_URL, {
+          method: "POST",
+          body: formData,
+        });
+      }
 
-// واجهة المستخدم
-let currentSection = 'inputs'; // يجب أن يكون خارج الدالة
+      // واجهة المستخدم
+      let currentSection = "inputs"; // يجب أن يكون خارج الدالة
 
-function showSection(section) {
-    currentSection = section; // تحديث القسم الحالي
-    let content = '';
-    
-    switch(section) {
-        case 'inputs':
+      function showSection(section) {
+        currentSection = section; // تحديث القسم الحالي
+        let content = "";
+
+        switch (section) {
+          case "inputs":
             content = `
                 <button onclick="showForm('inputs')">إضافة مدخل</button>
-                ${renderTable('inputs')}
+                ${renderTable("inputs")}
             `;
             break;
-        case 'expenses':
+          case "expenses":
             content = `
                 <button onclick="showForm('expenses')">إضافة مصروف</button>
-                ${renderTable('expenses')}
+                ${renderTable("expenses")}
             `;
             break;
-        case 'total':
+          case "total":
             content = renderSummary();
             break;
-    }
-    
-    document.getElementById('contentSection').innerHTML = content;
-}
+        }
 
-function renderTable(type) {
-    return `
-        <table class="data-table">
-            <thead>
+        document.getElementById("contentSection").innerHTML = content;
+      }
+
+      function renderTable(type) {
+        return `
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>المبلغ</th>
+                <th>نوع الدفعة</th>
+                <th>رقم الشيك</th>
+                <th>تاريخ الصرف</th>
+                <th>الوصف</th>
+                <th>التاريخ</th>
+                <th>الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+             ${records[type]
+               .map((record) => {
+                 const formattedDate = record.date || "-";
+                 return `
                 <tr>
-                    <th>ID</th>
-                    <th>المبلغ</th>
-                    <th>الوصف</th>
-                    <th>التاريخ</th>
-                    <th>الإجراءات</th>
+                    <td>${record.id}</td>
+                    <td>${record.amount}</td>
+                    <td>${record.paymentType}</td>
+                    <td>${record.chequeNumber || "-"}</td>
+                    <td>${record.chequeDate || "-"}</td>
+                    <td>${record.description}</td>
+                    <td>${formattedDate}</td>
+                    <td>
+                        <button onclick="editRecord('${type}', '${
+                   record.id
+                 }')">تعديل</button>
+                        <button onclick="deleteRecord('${type}', '${
+                   record.id
+                 }')">حذف</button>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                ${records[type].map(record => `
-                    <tr>
-                        <td>${record.id}</td>
-                        <td>${record.amount}</td>
-                        <td>${record.description}</td>
-                        <td>${record.date}</td> <!-- تم تحويل التنسيق مسبقًا -->
-                        <td>
-                            <button onclick="editRecord('${type}', '${record.id}')">تعديل</button>
-                            <button onclick="deleteRecord('${type}', '${record.id}')">حذف</button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-}
+                `;
+               })
+               .join("")}
+        </tbody>
+    </table>
+  `;
+      }
 
+      function exportToExcel(type) {
+        const data = records[type];
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Data");
+        XLSX.writeFile(wb, `${type}_export.xlsx`);
+      }
 
+      function renderSummary() {
+        console.log("جاري تنفيذ renderSummary...");
 
-function exportToExcel(type) {
-  const data = records[type];
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Data");
-  XLSX.writeFile(wb, `${type}_export.xlsx`);
-}
+        // التأكد من وجود contentSection قبل التعديل عليه
+        const contentSection = document.getElementById("contentSection");
+        if (!contentSection) {
+          console.error("🚨 العنصر 'contentSection' غير موجود في الصفحة.");
+          return;
+        }
 
-function renderSummary() {
-    console.log("جاري تنفيذ renderSummary...");
+        // التأكد من أن البيانات محملة
+        if (
+          !records ||
+          !Array.isArray(records.inputs) ||
+          !Array.isArray(records.expenses)
+        ) {
+          console.error(
+            "🚨 البيانات غير متاحة أو لم يتم تحميلها بشكل صحيح:",
+            records
+          );
+          contentSection.innerHTML = "<p>⚠ لا توجد بيانات متاحة.</p>";
+          contentSection.style.display = "block"; // تأكيد ظهور العنصر
+          return;
+        }
 
-    // التأكد من وجود contentSection قبل التعديل عليه
-    const contentSection = document.getElementById('contentSection');
-    if (!contentSection) {
-        console.error("🚨 العنصر 'contentSection' غير موجود في الصفحة.");
-        return;
-    }
+        console.log("✅ البيانات متاحة:", records);
 
-    // التأكد من أن البيانات محملة
-    if (!records || !Array.isArray(records.inputs) || !Array.isArray(records.expenses)) {
-        console.error("🚨 البيانات غير متاحة أو لم يتم تحميلها بشكل صحيح:", records);
-        contentSection.innerHTML = "<p>⚠ لا توجد بيانات متاحة.</p>";
-        contentSection.style.display = 'block'; // تأكيد ظهور العنصر
-        return;
-    }
+        // التأكد من أن المصفوفات تحتوي على بيانات
+        if (records.inputs.length === 0 && records.expenses.length === 0) {
+          console.warn("⚠ لا توجد بيانات في المدخلات أو المصروفات.");
+          contentSection.innerHTML = "<p>⚠ لا توجد بيانات متاحة.</p>";
+          contentSection.style.display = "block"; // تأكيد ظهور العنصر
+          return;
+        }
 
-    console.log("✅ البيانات متاحة:", records);
+        // حساب إجمالي المدخلات والمصروفات مع التأكد من تحويل القيم إلى أرقام
+        const totalInputs = records.inputs.reduce((sum, record) => {
+          console.log("🔹 معالجة مدخل:", record);
+          return sum + (parseFloat(record.amount) || 0);
+        }, 0);
 
-    // التأكد من أن المصفوفات تحتوي على بيانات
-    if (records.inputs.length === 0 && records.expenses.length === 0) {
-        console.warn("⚠ لا توجد بيانات في المدخلات أو المصروفات.");
-        contentSection.innerHTML = "<p>⚠ لا توجد بيانات متاحة.</p>";
-        contentSection.style.display = 'block'; // تأكيد ظهور العنصر
-        return;
-    }
+        const totalExpenses = records.expenses.reduce((sum, record) => {
+          console.log("🔸 معالجة مصروف:", record);
+          return sum + (parseFloat(record.amount) || 0);
+        }, 0);
 
-    // حساب إجمالي المدخلات والمصروفات مع التأكد من تحويل القيم إلى أرقام
-    const totalInputs = records.inputs.reduce((sum, record) => {
-        console.log("🔹 معالجة مدخل:", record);
-        return sum + (parseFloat(record.amount) || 0);
-    }, 0);
+        const netTotal = totalInputs - totalExpenses;
 
-    const totalExpenses = records.expenses.reduce((sum, record) => {
-        console.log("🔸 معالجة مصروف:", record);
-        return sum + (parseFloat(record.amount) || 0);
-    }, 0);
+        console.log("📊 الحسابات النهائية:", {
+          totalInputs,
+          totalExpenses,
+          netTotal,
+        });
 
-    const netTotal = totalInputs - totalExpenses;
-
-    console.log("📊 الحسابات النهائية:", { totalInputs, totalExpenses, netTotal });
-
-    // تحديث الصفحة بالنتائج
-    contentSection.innerHTML = `
+        // تحديث الصفحة بالنتائج
+        contentSection.innerHTML = `
     document.body.appendChild(contentSection);
 
    contentSection.innerText = "🚀 تم التحديث! إجمالي المدخلات: " + totalInputs + " $";
 
     `;
 
-    // تأكيد ظهور العنصر في الصفحة
-    contentSection.style.display = 'block';
+        // تأكيد ظهور العنصر في الصفحة
+        contentSection.style.display = "block";
 
-    console.log("✅ تم تحديث contentSection بنجاح.");
-}
+        console.log("✅ تم تحديث contentSection بنجاح.");
+      }
 
+      // دالة لعرض نموذج الإضافة
+      function showForm(type) {
+        const localDate = new Date(Date.now() + 2 * 60 * 60 * 1000);
+        const formHTML = `
+    <div class="form-overlay" onclick="closeForm()">
+        <div class="entry-form" onclick="event.stopPropagation()"> 
+            <h3>${type === "inputs" ? "إضافة مدخل" : "إضافة مصروف"}</h3>
+            <form onsubmit="submitForm(event, '${type}')">
+                
+                <div class="form-group">
+                    <label>المبلغ:</label>
+                    <input type="number" id="amount" required>
+                </div>
 
+                <div class="form-group">
+                    <label>نوع الدفعة:</label>
+                    <select id="paymentType" onchange="toggleChequeFields()">
+                        <option value="نقدي">نقدي</option>
+                        <option value="إلكتروني">إلكتروني</option>
+                        <option value="شيك">شيك</option>
+                    </select>
+                </div>
 
+                <div id="chequeFields" style="display: none;">
+                    <div class="form-group">
+                        <label>رقم الشيك:</label>
+                        <input type="text" id="chequeNumber">
+                    </div>
+                    <div class="form-group">
+                        <label>تاريخ الصرف:</label>
+                        <input type="date" id="chequeDate">
+                    </div>
+                </div>
 
+                <div class="form-group">
+                    <label>الوصف:</label>
+                    <textarea id="description" rows="3"></textarea>
+                </div>
 
-// دالة لعرض نموذج الإضافة
-function showForm(type) {
-    const formHTML = `
-        <div class="form-overlay" onclick="closeForm()">
-            <div class="entry-form" onclick="event.stopPropagation()"> <!-- التعديل هنا -->
-                <h3>${type === 'inputs' ? 'إضافة مدخل' : 'إضافة مصروف'}</h3>
-                <form onsubmit="submitForm(event, '${type}')">
-                    <input type="number" placeholder="المبلغ" required>
-                    <textarea placeholder="الوصف" rows="3"></textarea>
-                    <button type="submit">حفظ</button>
-                    <button type="button" onclick="closeForm()">إلغاء</button>
-                </form>
-            </div>
+               
+
+                <button type="submit">💾 حفظ</button>
+                <button type="button" class="cancel-btn" onclick="closeForm()">❌ إلغاء</button>
+            </form>
         </div>
+    </div>
     `;
-    document.body.insertAdjacentHTML('beforeend', formHTML);
-    document.querySelector('.form-overlay').style.display = 'block';
-}
+        document.body.insertAdjacentHTML("beforeend", formHTML);
+        document.querySelector(".form-overlay").style.display = "flex";
+      }
 
-// دالة لإغلاق النموذج
-function closeForm() {
-    const formOverlay = document.querySelector('.form-overlay');
-    if (formOverlay) formOverlay.remove();
-}
-// دالة معالجة إرسال النموذج
-async function submitForm(event, type) {
-    event.preventDefault();
-    const form = event.target;
-    const amount = form.querySelector('input').value;
-    const description = form.querySelector('textarea').value;
+      // دالة لإظهار أو إخفاء حقول الشيك
+      function toggleChequeFields() {
+        const paymentType = document.getElementById("paymentType").value;
+        const chequeFields = document.getElementById("chequeFields");
+        chequeFields.style.display = paymentType === "شيك" ? "block" : "none";
+      }
 
-    if (!amount || !description) {
-        alert('يرجى ملء جميع الحقول');
-        return;
-    }
+      // دالة لإغلاق النموذج
+      function closeForm() {
+        const formOverlay = document.querySelector(".form-overlay");
+        if (formOverlay) {
+          formOverlay.style.opacity = "0";
+          setTimeout(() => formOverlay.remove(), 300);
+        }
+      }
 
-    const newRecord = {
-        amount: amount,
-        description: description,
-        date: new Date().toLocaleString(),
-        id: Date.now().toString()
-    };
+      // دالة معالجة إرسال النموذج
+      async function submitForm(event, type) {
+        event.preventDefault();
 
-    try {
-        await saveToGoogleSheets(type, newRecord);
-        records[type].push(newRecord);
-        updateTables();
-        closeForm(); // <-- إغلاق النموذج بعد النجاح
-    } catch (error) {
-        alert('فشل في حفظ البيانات: ' + error.message);
-    }
-}
-// دالة تحديث الجداول
-function updateTables() {
-    if (currentSection === 'inputs' || currentSection === 'expenses') {
-        showSection(currentSection);
-    }
-}
+        const amount = document.getElementById("amount").value;
+        const paymentType = document.getElementById("paymentType").value;
+        const chequeNumber =
+          document.getElementById("chequeNumber")?.value || "";
+        const chequeDate = document.getElementById("chequeDate")?.value || "";
+        const description = document.getElementById("description").value;
 
+        // إنشاء تاريخ جديد مع المنطقة الزمنية الصحيحة
+        const now = new Date();
+        //const localDate = new Date(now.getTime() + now.getTimezoneOffset() * 60 * 1000);
+        // إضافة أو طرح الساعات يدويًا
+        const localDate = new Date(Date.now() + 2 * 60 * 60 * 1000);
 
-</script>
-</body>
+        const newRecord = {
+          id: Date.now().toString(),
+          amount: amount,
+          paymentType: paymentType,
+          chequeNumber: chequeNumber,
+          chequeDate: chequeDate,
+          description: description,
+          date: localDate.toISOString(), // تخزين التاريخ بصيغة ISO
+          //date: now.toISOString(),
+        };
+
+        try {
+          showMessage("⏳ جاري إرسال البيانات...", "loading");
+
+          // إرسال البيانات للسيرفر
+          const formData = new FormData();
+          formData.append("action", "addRecord");
+          formData.append("type", type);
+          formData.append("data", JSON.stringify(newRecord));
+
+          await fetch(API_URL, {
+            method: "POST",
+            body: formData,
+          });
+
+          // تحديث الواجهة
+          records[type].push(newRecord);
+          updateTables();
+          closeForm();
+          showMessage("✅ تم الحفظ بنجاح!", "success");
+        } catch (error) {
+          showMessage("❌ فشل في حفظ البيانات: " + error.message, "error");
+        }
+      }
+
+      // دالة تحديث الجداول
+      function updateTables() {
+        if (currentSection === "inputs" || currentSection === "expenses") {
+          showSection(currentSection);
+        }
+      }
+
+      function showMessage(message, type = "success") {
+        let color;
+        if (type === "success") color = "var(--success)";
+        else if (type === "error") color = "var(--error)";
+        else color = "var(--secondary)"; // Loading
+
+        let messageBox = document.getElementById("messageBox");
+        if (!messageBox) {
+          messageBox = document.createElement("div");
+          messageBox.id = "messageBox";
+          messageBox.className = "message-box";
+          document.body.appendChild(messageBox);
+        }
+
+        messageBox.textContent = message;
+        messageBox.style.background = color;
+        messageBox.style.display = "block";
+
+        setTimeout(() => {
+          messageBox.style.display = "none";
+        }, 3000);
+      }
+      function getFormattedDate() {
+        const now = new Date();
+        return now.toISOString(); // إرسال التاريخ بصيغة ISO
+      }
+    </script>
+  </body>
 </html>
