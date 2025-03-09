@@ -87,14 +87,23 @@
       }
 
       /* التذييل */
+      body {
+        margin-bottom: 80px; /* يتناسب مع ارتفاع الفوتر */
+      }
+
+      /* تثبيت الفوتر في الأسفل مع تحسينات */
       footer {
-        text-align: center;
-        padding: 1rem;
-        background: var(--primary);
-        color: white;
         position: fixed;
         bottom: 0;
-        width: 100%;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000; /* التأكد من ظهوره فوق العناصر */
       }
       @media (max-width: 768px) {
         .dashboard-header {
@@ -269,6 +278,150 @@
       .cancel-btn:hover {
         background-color: #c0392b;
       }
+
+      /* test */
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        max-width: 300px; /* تحديد عرض أقصى */
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+      }
+
+      /* تركيز خاص على حقل المبلغ */
+      #amount {
+        font-weight: bold;
+        border-color: #3498db;
+      }
+
+      /* تحسين الحقول عند التركيز */
+      .form-group input:focus,
+      .form-group textarea:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+        outline: none;
+      }
+      /* test2 */
+      .data-table {
+        margin-top: 20px;
+        margin-bottom: 40px; /* زيادة الهامش السفلي */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        overflow: hidden; /* لمنع تداخل الظلال */
+      }
+
+      /* تحسين تنسيق الصفوف */
+      .data-table tr:hover {
+        background-color: #f8f9fa;
+        transform: scale(1.02);
+        transition: all 0.2s ease;
+      }
+
+      /* تحسين تنسيق الأزرار 
+      button {
+        min-width: 120px;
+        padding: 12px 20px;
+        font-size: 16px;
+        border-radius: 8px;
+      }
+        */
+      /* تحسين التجاوب على الشاشات الصغيرة */
+      @media (max-width: 768px) {
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+          max-width: 100%;
+          font-size: 14px;
+        }
+
+        .data-table th,
+        .data-table td {
+          padding: 8px;
+          font-size: 14px;
+        }
+
+        button {
+          width: 100%;
+          margin: 5px 0;
+        }
+      }
+
+      /* test3 */
+
+      .form-group label::after {
+        content: " *";
+        color: #e74c3c;
+        display: inline-block;
+        margin-left: 4px;
+      }
+
+      /* تحسين الرسائل التحذيرية */
+      .message-box {
+        top: 20px;
+        right: 20px;
+        left: auto;
+        transform: none;
+        width: auto;
+        min-width: 300px;
+      }
+
+      /* تحسين التوقيت في الهيدر */
+      #currentTime {
+        font-family: monospace;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 5px 10px;
+        border-radius: 4px;
+      }
+      /* test4 */
+      .loading-message {
+        background: var(--secondary) !important;
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+      /*.search-box {
+        padding: 10px;
+        border: 2px solid #3498db;
+        border-radius: 8px;
+        width: 250px;
+        margin: 0 10px;
+      }*/
+      /* تحسين مربع البحث */
+      .search-box {
+        padding: 12px;
+        border: 2px solid #3498db;
+        border-radius: 8px;
+        width: 300px;
+        transition: all 0.3s;
+      }
+
+      .search-box:focus {
+        border-color: #2ecc71;
+        box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
+      }
+
+      /* رسالة البحث */
+      .search-info {
+        margin: 15px 0;
+        font-size: 14px;
+        color: #2c3e50;
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 8px;
+      }
     </style>
   </head>
   <body>
@@ -296,6 +449,13 @@
         <button onclick="showSection('inputs')">المدخلات</button>
         <button onclick="showSection('expenses')">المصروفات</button>
         <button onclick="showSection('total')">المجموع</button>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="ابحث هنا..."
+          onkeyup="handleSearch()"
+          style="padding: 10px; border-radius: 8px; border: 1px solid #ddd"
+        />
       </div>
 
       <!-- محتوى الصفحات -->
@@ -317,6 +477,7 @@
 
       // بيانات التطبيق
       let currentUser = null;
+      let currentSearchTerm = "";
       let records = {
         inputs: [],
         expenses: [],
@@ -338,23 +499,28 @@
             document.getElementById("username").textContent = username;
             startClock();
             loadData();
+            startAutoRefresh();
           }
         });
-
+      function handleSearch() {
+        const searchTerm = document.getElementById("searchInput").value;
+        currentSearchTerm = searchTerm.toLowerCase();
+        showSection(currentSection); // إعادة عرض الجدول
+      }
       // تحميل البيانات
       async function loadData() {
         try {
+          showMessage("🔄 جاري تحديث البيانات...", "loading");
           const response = await fetch(`${API_URL}?action=getAll`);
           const data = await response.json();
 
-          // تحقق من بنية البيانات
-          console.log("البيانات المحملة:", data);
-
           records.inputs = data.inputs || [];
           records.expenses = data.expenses || [];
-
+          showSection(currentSection);
           updateTables();
+          showMessage("✅ تم تحديث البيانات", "success");
         } catch (error) {
+          showMessage("❌ فشل في تحديث البيانات", "error");
           console.error("فشل في تحميل البيانات:", error);
         }
       }
@@ -436,48 +602,108 @@
       }
 
       function renderTable(type) {
+        const searchTerm = currentSearchTerm.toLowerCase();
+        const originalData = records[type] || [];
+
+        const filteredData = originalData.filter((record) => {
+          return (
+            // تحويل جميع الحقول إلى سلسلة نصية قبل البحث
+            String(record.id).toLowerCase().includes(searchTerm) ||
+            String(record.amount).toLowerCase().includes(searchTerm) ||
+            String(record.paymentType || "")
+              .toLowerCase()
+              .includes(searchTerm) ||
+            String(record.chequeNumber || "")
+              .toLowerCase()
+              .includes(searchTerm) ||
+            String(record.chequeDate || "")
+              .toLowerCase()
+              .includes(searchTerm) ||
+            String(record.description || "")
+              .toLowerCase()
+              .includes(searchTerm)
+          );
+        });
+        const totalAmount = filteredData.reduce((sum, record) => {
+          return sum + (parseFloat(record.amount) || 0);
+        }, 0);
+
+        // 3. التحضير لعرض الرسائل
+        let message = "";
+        if (filteredData.length === 0) {
+          message =
+            originalData.length === 0
+              ? "⚠️ لا توجد بيانات متاحة"
+              : "🔍 لم يتم العثور على نتائج";
+        }
+
         return `
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>المبلغ</th>
-                <th>نوع الدفعة</th>
-                <th>رقم الشيك</th>
-                <th>تاريخ الصرف</th>
-                <th>الوصف</th>
-                <th>التاريخ</th>
-                <th>الإجراءات</th>
-            </tr>
-        </thead>
-        <tbody>
-             ${records[type]
-               .map((record) => {
-                 const formattedDate = record.date || "-";
-                 return `
+        <!-- بداية قسم الرسائل -->
+        ${message ? `<div class="message-box">${message}</div>` : ""}
+        
+        <!-- قسم إحصائيات البحث -->
+        <div class="search-stats">
+            <span>عدد السجلات: ${filteredData.length}</span><br>
+            <span> الإجمالي: ${totalAmount.toFixed(2)}</span><br>
+            ${
+              currentSearchTerm
+                ? `<span>  تم البحث عن: "${currentSearchTerm}"</span>`
+                : ""
+            }
+        </div>
+
+        <!-- الجدول -->
+        <table class="data-table">
+            <thead>
                 <tr>
-                    <td>${record.id}</td>
-                    <td>${record.amount}</td>
-                    <td>${record.paymentType}</td>
-                    <td>${record.chequeNumber || "-"}</td>
-                    <td>${record.chequeDate || "-"}</td>
-                    <td>${record.description}</td>
-                    <td>${formattedDate}</td>
-                    <td>
-                        <button onclick="editRecord('${type}', '${
-                   record.id
-                 }')">تعديل</button>
-                        <button onclick="deleteRecord('${type}', '${
-                   record.id
-                 }')">حذف</button>
-                    </td>
+                    <th>ID</th>
+                    <th>المبلغ</th>
+                    <th>نوع الدفعة</th>
+                    <th>رقم الشيك</th>
+                    <th>تاريخ الصرف</th>
+                    <th>الوصف</th>
+                    <th>التاريخ</th>
+                    <th>الإجراءات</th>
                 </tr>
-                `;
-               })
-               .join("")}
-        </tbody>
-    </table>
-  `;
+            </thead>
+            <tbody>
+                ${filteredData
+                  .map((record) => {
+                    const formattedDate = record.date
+                      ? new Date(record.date).toLocaleString("ar-EG", {
+                          timeZone: "Asia/Gaza",
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          // hour: "2-digit",
+                          //  minute: "2-digit",
+                        })
+                      : "-";
+
+                    return `
+                        <tr>
+                            <td>${record.id}</td>
+                            <td>${record.amount}</td>
+                            <td>${record.paymentType || "-"}</td>
+                            <td>${record.chequeNumber || "-"}</td>
+                            <td>${record.chequeDate || "-"}</td>
+                            <td>${record.description}</td>
+                            <td>${formattedDate}</td>
+                            <td>
+                                <button onclick="editRecord('${type}', '${
+                      record.id
+                    }')">✏️ تعديل</button>
+                                <button onclick="deleteRecord('${type}', '${
+                      record.id
+                    }')">🗑️ حذف</button>
+                            </td>
+                        </tr>
+                    `;
+                  })
+                  .join("")}
+            </tbody>
+        </table>
+    `;
       }
 
       function exportToExcel(type) {
@@ -707,6 +933,46 @@
       function getFormattedDate() {
         const now = new Date();
         return now.toISOString(); // إرسال التاريخ بصيغة ISO
+      }
+      // دالة التحديث التلقائي
+      function startAutoRefresh() {
+        setInterval(() => {
+          if (currentUser) {
+            // تحديث فقط إذا كان المستخدم مسجل الدخول
+            console.log("🔄 جاري تحديث البيانات تلقائيًا...");
+            loadData();
+          }
+        }, 90000); // 60 ثانية = 1 دقيقة
+      }
+
+      // أضف هذا في بداية قسم الـ script
+      // دالة التصفية الرئيسية
+      function filterTable() {
+        currentSearchTerm = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        showSection(currentSection);
+      }
+
+      // دالة مساعدة للبحث في السجلات
+      function searchRecords(records) {
+        return records.filter((record) => {
+          return Object.values(record).some((value) =>
+            String(value).toLowerCase().includes(searchTerm)
+          );
+        });
+      }
+
+      let searchTimeout;
+
+      function filterTable() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          searchTerm = document
+            .getElementById("searchInput")
+            .value.toLowerCase();
+          showSection(currentSection);
+        }, 300); // تأخير 300ms
       }
     </script>
   </body>
