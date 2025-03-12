@@ -422,6 +422,107 @@
         padding: 10px;
         border-radius: 8px;
       }
+      /* التصفية */
+      .table-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+      }
+
+      .table-controls button {
+        background: #2ecc71;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .table-controls button:hover {
+        background: #27ae60;
+      }
+
+      /*  total  */
+
+      /* أنماط صفحة المجموع */
+      .summary-section {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+      }
+
+      .financial-summary {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+      }
+
+      .financial-summary th,
+      .financial-summary td {
+        padding: 15px;
+        border: 1px solid #ddd;
+        text-align: center;
+      }
+
+      .financial-summary th {
+        background-color: var(--primary);
+        color: white;
+      }
+
+      .net-profit {
+        font-weight: bold;
+        background-color: #e8f5e9 !important;
+      }
+
+      .net-profit td {
+        color: #2e7d32;
+        font-size: 1.1em;
+      }
+      /*  انماط الطباعة  */
+      @media print {
+        /* إخفاء العناصر غير المرغوب فيها */
+        .summary-section button,
+        .date-filters,
+        header,
+        footer,
+        .main-buttons {
+          display: none !important;
+        }
+
+        /* تنسيق خاص للطباعة */
+        .print-only {
+          display: block !important;
+          font-size: 18px;
+          margin-bottom: 20px;
+          border-bottom: 2px solid #000;
+          padding-bottom: 10px;
+        }
+
+        .financial-summary {
+          width: 100% !important;
+          font-size: 16px;
+        }
+
+        .financial-summary th {
+          background-color: #f0f0f0 !important;
+          color: #000 !important;
+        }
+
+        .net-profit td {
+          font-weight: bold;
+          color: #2e7d32 !important;
+        }
+      }
+      @media print {
+        body > :not(.summary-section) {
+          page-break-before: avoid; /* منع إنشاء صفحات جديدة قبل العناصر */
+        }
+      }
+      .financial-summary {
+        page-break-inside: avoid; /* منع تقسيم الجدول بين الصفحات */
+      }
     </style>
   </head>
   <body>
@@ -457,7 +558,15 @@
           style="padding: 10px; border-radius: 8px; border: 1px solid #ddd"
         />
       </div>
-
+      <div class="date-filters">
+        <div>تصفية حسب التاريخ :</div>
+        <label for="reportStartDate">تاريخ البداية</label>
+        <input type="date" id="startDate" class="date-input" />
+        <label for="reportStartDate">تاريخ النهاية</label>
+        <input type="date" id="endDate" class="date-input" />
+        <button onclick="applyDateFilter()">🔍 تطبيق التصفية</button>
+        <button onclick="clearDateFilter()">🗑️ مسح التواريخ</button>
+      </div>
       <!-- محتوى الصفحات -->
       <div id="contentSection"></div>
     </div>
@@ -476,6 +585,8 @@
         "https://script.google.com/macros/s/AKfycbx0Ml1znLvTbEQK3w34RCzhamE3bbRDCP-uBBzUNaGGKF-bbjaLI4b94CTSecIBGVRL3A/exec";
 
       // بيانات التطبيق
+      let currentStartDate = null; // تاريخ البداية المحدد
+      let currentEndDate = null; // تاريخ النهاية المحدد
       let currentUser = null;
       let currentSearchTerm = "";
       let records = {
@@ -506,6 +617,34 @@
         const searchTerm = document.getElementById("searchInput").value;
         currentSearchTerm = searchTerm.toLowerCase();
         showSection(currentSection); // إعادة عرض الجدول
+      }
+
+      function applyDateFilter() {
+        // 1. قراءة التواريخ من الحقول
+        currentStartDate = document.getElementById("startDate").value;
+        currentEndDate = document.getElementById("endDate").value;
+
+        // 2. طباعة التواريخ للتأكد من قراءتها (للت debug)
+        console.log("تاريخ البداية:", currentStartDate);
+        console.log("تاريخ النهاية:", currentEndDate);
+        if (
+          currentStartDate &&
+          currentEndDate &&
+          currentStartDate > currentEndDate
+        ) {
+          alert("⚠️ تاريخ البداية يجب أن يكون قبل تاريخ النهاية!");
+          return;
+        }
+        // 3. إعادة تحميل القسم الحالي مع التصفية
+        showSection(currentSection);
+      }
+
+      function clearDateFilter() {
+        document.getElementById("startDate").value = "";
+        document.getElementById("endDate").value = "";
+        currentStartDate = null;
+        currentEndDate = null;
+        showSection(currentSection);
       }
       // تحميل البيانات
       async function loadData() {
@@ -539,7 +678,7 @@
           };
 
           document.getElementById("currentTime").textContent =
-            new Date().toLocaleString("ar-EG", options);
+            new Date().toLocaleString("en-CA", options);
         }, 1000);
       }
 
@@ -583,13 +722,15 @@
         switch (section) {
           case "inputs":
             content = `
-                <button onclick="showForm('inputs')">إضافة مدخل</button>
+               <br> <button onclick="showForm('inputs')">إضافة مدخل</button>
+                <button onclick="exportFilteredToExcel('inputs')">📤 تصدير إلى Excel</button>
                 ${renderTable("inputs")}
             `;
             break;
           case "expenses":
             content = `
                 <button onclick="showForm('expenses')">إضافة مصروف</button>
+                <button onclick="exportFilteredToExcel('expenses')">📤 تصدير إلى Excel</button>
                 ${renderTable("expenses")}
             `;
             break;
@@ -606,8 +747,8 @@
         const originalData = records[type] || [];
 
         const filteredData = originalData.filter((record) => {
-          return (
-            // تحويل جميع الحقول إلى سلسلة نصية قبل البحث
+          // التصفية النصية
+          const textMatch =
             String(record.id).toLowerCase().includes(searchTerm) ||
             String(record.amount).toLowerCase().includes(searchTerm) ||
             String(record.paymentType || "")
@@ -621,8 +762,12 @@
               .includes(searchTerm) ||
             String(record.description || "")
               .toLowerCase()
-              .includes(searchTerm)
-          );
+              .includes(searchTerm);
+
+          // التصفية الزمنية
+          const dateMatch = checkDateFilter(record.date);
+
+          return textMatch && dateMatch;
         });
         const totalAmount = filteredData.reduce((sum, record) => {
           return sum + (parseFloat(record.amount) || 0);
@@ -670,14 +815,16 @@
                 ${filteredData
                   .map((record) => {
                     const formattedDate = record.date
-                      ? new Date(record.date).toLocaleString("ar-EG", {
-                          timeZone: "Asia/Gaza",
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                          // hour: "2-digit",
-                          //  minute: "2-digit",
-                        })
+                      ? new Date(record.date)
+                          .toLocaleString("en-CA", {
+                            timeZone: "Asia/Gaza",
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            // hour: "2-digit",
+                            //  minute: "2-digit",
+                          })
+                          .replace(/\//g, "-")
                       : "-";
 
                     return `
@@ -706,6 +853,55 @@
     `;
       }
 
+      function checkDateFilter(recordDateStr) {
+        if (!currentStartDate && !currentEndDate) return true;
+
+        try {
+          const recordDate = parseArabicDate(recordDateStr);
+          const startDate = currentStartDate
+            ? new Date(currentStartDate)
+            : null;
+          const endDate = currentEndDate ? new Date(currentEndDate) : null;
+
+          // ضبط الوقت لتشمل اليوم كاملًا
+          if (startDate) startDate.setHours(0, 0, 0, 0);
+          if (endDate) endDate.setHours(23, 59, 59, 999);
+
+          return (
+            (!startDate || recordDate >= startDate) &&
+            (!endDate || recordDate <= endDate)
+          );
+        } catch (error) {
+          console.error("خطأ في معالجة التاريخ:", recordDateStr, error);
+          return false;
+        }
+      }
+
+      function parseArabicDate(dateStr) {
+        // إذا كان التاريخ بالفعل بتنسيق ISO
+        if (dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+          return new Date(dateStr);
+        }
+
+        // تحويل التاريخ العربي
+        const arabicToEnglish = {
+          "٠": "0",
+          "١": "1",
+          "٢": "2",
+          "٣": "3",
+          "٤": "4",
+          "٥": "5",
+          "٦": "6",
+          "٧": "7",
+          "٨": "8",
+          "٩": "9",
+        };
+
+        const converted = dateStr.replace(/[٠-٩]/g, (m) => arabicToEnglish[m]);
+        const [day, month, year] = converted.split(/[/-]/).map(Number);
+        return new Date(year, month - 1, day);
+      }
+
       function exportToExcel(type) {
         const data = records[type];
         const ws = XLSX.utils.json_to_sheet(data);
@@ -713,73 +909,104 @@
         XLSX.utils.book_append_sheet(wb, ws, "Data");
         XLSX.writeFile(wb, `${type}_export.xlsx`);
       }
+      function printFinancialReport() {
+        const startDate = document.getElementById("reportStartDate").value;
+        const endDate = document.getElementById("reportEndDate").value;
 
-      function renderSummary() {
-        console.log("جاري تنفيذ renderSummary...");
-
-        // التأكد من وجود contentSection قبل التعديل عليه
-        const contentSection = document.getElementById("contentSection");
-        if (!contentSection) {
-          console.error("🚨 العنصر 'contentSection' غير موجود في الصفحة.");
+        if (!startDate || !endDate) {
+          alert("⚠️ الرجاء اختيار التواريخ أولاً");
           return;
         }
 
-        // التأكد من أن البيانات محملة
-        if (
-          !records ||
-          !Array.isArray(records.inputs) ||
-          !Array.isArray(records.expenses)
-        ) {
-          console.error(
-            "🚨 البيانات غير متاحة أو لم يتم تحميلها بشكل صحيح:",
-            records
-          );
-          contentSection.innerHTML = "<p>⚠ لا توجد بيانات متاحة.</p>";
-          contentSection.style.display = "block"; // تأكيد ظهور العنصر
-          return;
-        }
-
-        console.log("✅ البيانات متاحة:", records);
-
-        // التأكد من أن المصفوفات تحتوي على بيانات
-        if (records.inputs.length === 0 && records.expenses.length === 0) {
-          console.warn("⚠ لا توجد بيانات في المدخلات أو المصروفات.");
-          contentSection.innerHTML = "<p>⚠ لا توجد بيانات متاحة.</p>";
-          contentSection.style.display = "block"; // تأكيد ظهور العنصر
-          return;
-        }
-
-        // حساب إجمالي المدخلات والمصروفات مع التأكد من تحويل القيم إلى أرقام
-        const totalInputs = records.inputs.reduce((sum, record) => {
-          console.log("🔹 معالجة مدخل:", record);
-          return sum + (parseFloat(record.amount) || 0);
-        }, 0);
-
-        const totalExpenses = records.expenses.reduce((sum, record) => {
-          console.log("🔸 معالجة مصروف:", record);
-          return sum + (parseFloat(record.amount) || 0);
-        }, 0);
-
-        const netTotal = totalInputs - totalExpenses;
-
-        console.log("📊 الحسابات النهائية:", {
-          totalInputs,
-          totalExpenses,
-          netTotal,
-        });
-
-        // تحديث الصفحة بالنتائج
-        contentSection.innerHTML = `
-    document.body.appendChild(contentSection);
-
-   contentSection.innerText = "🚀 تم التحديث! إجمالي المدخلات: " + totalInputs + " $";
-
+        // تحديث قسم التواريخ المخصص للطباعة
+        document.getElementById("printDates").innerHTML = `
+        <p>الفترة من: <strong>${startDate}</strong> إلى <strong>${endDate}</strong></p>
     `;
 
-        // تأكيد ظهور العنصر في الصفحة
-        contentSection.style.display = "block";
+        // تشغيل نافذة الطباعة
+        window.print();
+      }
 
-        console.log("✅ تم تحديث contentSection بنجاح.");
+      function renderSummary() {
+        return `
+        <div class="summary-section">
+            <h2>تقرير الأداء المالي</h2>
+
+            <div class="date-filters">
+                <label for="reportStartDate">تاريخ البداية</label>
+                <input type="date" id="reportStartDate" class="date-input">
+                <label for="reportStartDate">تاريخ النهاية</label>
+                <input type="date" id="reportEndDate" class="date-input">
+                <button onclick="calculateFinancialSummary()">حساب النتائج</button>
+            </div>
+    <div id="printDates" class="print-only"></div>
+
+            <table class="financial-summary">
+                <thead>
+                    <tr>
+                        <th>البند</th>
+                        <th>القيمة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>مجموع المدخلات</td>
+                        <td id="totalInputs">-</td>
+                    </tr>
+                    <tr>
+                        <td>مجموع المصاريف</td>
+                        <td id="totalExpenses">-</td>
+                    </tr>
+                    <tr class="net-profit">
+                        <td>صافي الربح</td>
+                        <td id="netTotal">-</td>
+                    </tr>
+                </tbody>
+            </table>
+                           <br> <button onclick="printFinancialReport()" class="print-btn">🖨️ طباعة التقرير</button>
+
+        </div>
+    `;
+      }
+
+      function calculateFinancialSummary() {
+        const startDate = document.getElementById("reportStartDate").value;
+        const endDate = document.getElementById("reportEndDate").value;
+
+        if (!startDate || !endDate) {
+          alert("⚠️ الرجاء اختيار تاريخ البداية والنهاية");
+          return;
+        }
+
+        // حساب المدخلات
+        const totalInputs = calculateTotal("inputs", startDate, endDate);
+        // حساب المصاريف
+        const totalExpenses = calculateTotal("expenses", startDate, endDate);
+        // صافي الربح
+        const netProfit = totalInputs - totalExpenses;
+
+        // عرض النتائج
+        document.getElementById("totalInputs").textContent =
+          totalInputs.toFixed(2);
+        document.getElementById("totalExpenses").textContent =
+          totalExpenses.toFixed(2);
+        document.getElementById("netTotal").textContent = netProfit.toFixed(2);
+      }
+
+      function calculateTotal(type, startDate, endDate) {
+        return records[type].reduce((sum, record) => {
+          const recordDate = parseArabicDate(record.date);
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+
+          start.setHours(0, 0, 0, 0);
+          end.setHours(23, 59, 59, 999);
+
+          if (recordDate >= start && recordDate <= end) {
+            return sum + (parseFloat(record.amount) || 0);
+          }
+          return sum;
+        }, 0);
       }
 
       // دالة لعرض نموذج الإضافة
@@ -972,7 +1199,43 @@
             .getElementById("searchInput")
             .value.toLowerCase();
           showSection(currentSection);
-        }, 300); // تأخير 300ms
+        }, 3000); // تأخير 300ms
+      }
+      function exportFilteredToExcel(type) {
+        // 1. الحصول على البيانات المصفاة
+        const searchTerm = currentSearchTerm.toLowerCase();
+        const originalData = records[type] || [];
+
+        const filteredData = originalData.filter((record) => {
+          // نفس شروط التصفية المستخدمة في renderTable
+          const textMatch =
+            String(record.id).toLowerCase().includes(searchTerm) ||
+            String(record.amount).toLowerCase().includes(searchTerm) ||
+            String(record.paymentType || "")
+              .toLowerCase()
+              .includes(searchTerm) ||
+            String(record.chequeNumber || "")
+              .toLowerCase()
+              .includes(searchTerm) ||
+            String(record.chequeDate || "")
+              .toLowerCase()
+              .includes(searchTerm) ||
+            String(record.description || "")
+              .toLowerCase()
+              .includes(searchTerm);
+
+          const dateMatch = checkDateFilter(record.date);
+          return textMatch && dateMatch;
+        });
+
+        // 2. إنشاء ملف Excel
+        const worksheet = XLSX.utils.json_to_sheet(filteredData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "البيانات");
+
+        // 3. تنزيل الملف
+        const date = new Date().toISOString().split("T")[0];
+        XLSX.writeFile(workbook, `${type}_${date}.xlsx`);
       }
     </script>
   </body>
